@@ -10,7 +10,7 @@ namespace Pokupka
         [SerializeField]
         float m_MoveSpeed = 6f;
         [SerializeField, Tooltip("Max distance from the origin on X or Z")]
-        float m_WorldHalfSize = 24f;
+        float m_WorldHalfSize = 60f;
         [SerializeField, Tooltip("Resend interval while right-click is held")]
         float m_HeldResendInterval = 0.1f;
 

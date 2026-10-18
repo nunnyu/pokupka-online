@@ -249,7 +249,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   m_MoveSpeed: 6
-  m_WorldHalfSize: 24
+  m_WorldHalfSize: 60
   m_HeldResendInterval: 0.1
 --- !u!1 &5512093817465102231
 GameObject:

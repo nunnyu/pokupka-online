@@ -4,6 +4,8 @@
     "references": [
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
         "Pokupka.Shared",
         "ParrelSync",
         "Unity.Services.Core",
