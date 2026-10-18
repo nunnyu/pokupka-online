@@ -42,7 +42,7 @@ namespace Unity.Template.Multiplayer.NGO.Runtime
                 return;
             }
 
-            if ((m_NetworkManager.ConnectedClients.Count + CustomNetworkManager.Singleton.BotsSpawned) >= CustomNetworkManager.Singleton.ExpectedPlayers)
+            if (m_NetworkManager.ConnectedClients.Count >= CustomNetworkManager.Singleton.ExpectedPlayers)
             {
                 Debug.Log("Rejecting player since server is full");
                 response.Approved = false;

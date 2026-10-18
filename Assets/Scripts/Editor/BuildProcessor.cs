@@ -86,7 +86,6 @@ namespace Unity.Template.Multiplayer.NGO.Editor
         void ApplyPreBuildChanges()
         {
             //add your code to apply changes to systems here, I.E: to reference different testing environments
-            ApplyChangesToMetagameApplication();
             bool mobileBuild = false;
 #if UNITY_ANDROID || UNITY_IOS
             mobileBuild = true;
@@ -122,7 +121,6 @@ namespace Unity.Template.Multiplayer.NGO.Editor
 
         void RevertPreBuildChanges()
         {
-            RevertChangesToMetagameApplication();
             //add your code to revert changes to systems here, I.E: to reference different testing environments
             bool mobileBuild = false;
 #if UNITY_ANDROID || UNITY_IOS
@@ -137,44 +135,6 @@ namespace Unity.Template.Multiplayer.NGO.Editor
             Debug.Log($"PostProcess: Deleting {relativePathToStreamingAssetsFolder}");
             AssetDatabase.DeleteAsset(relativePathToStreamingAssetsFolder);
             Debug.Log("Reverted changes before build");
-        }
-
-        void ApplyChangesToMetagameApplication()
-        {
-            MetagameApplication app = FindMetagameAppInProject();
-            //add your code to apply changes to the MetagameApplication here, I.E: to reference different testing environments
-            PrefabUtility.SavePrefabAsset(app.gameObject, out bool savedSuccessfully);
-            if (!savedSuccessfully)
-            {
-                throw new BuildPlayerWindow.BuildMethodException("Failed to alter MetagameApplication before building");
-            }
-            Debug.Log("Updated MetagameApp before build");
-        }
-
-        void RevertChangesToMetagameApplication()
-        {
-            MetagameApplication app = FindMetagameAppInProject();
-            //add your code to revert changes to the MetagameApplication here, I.E: to reference different testing environments
-            PrefabUtility.SavePrefabAsset(app.gameObject, out bool savedSuccessfully);
-            if (!savedSuccessfully)
-            {
-                throw new BuildPlayerWindow.BuildMethodException("Failed to restore MetagameApplication after building");
-            }
-            Debug.Log("Updated MetagameApp after build");
-        }
-
-        MetagameApplication FindMetagameAppInProject()
-        {
-            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new string[] { "Assets/Prefabs/Metagame" }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                var root = (GameObject)AssetDatabase.LoadMainAssetAtPath(path);
-                if (root.GetComponent<MetagameApplication>())
-                {
-                    return root.GetComponent<MetagameApplication>();
-                }
-            }
-            return null;
         }
 
         [MenuItem("Multiplayer/Builds/All")]
