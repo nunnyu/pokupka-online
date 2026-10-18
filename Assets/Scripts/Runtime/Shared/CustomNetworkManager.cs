@@ -10,7 +10,7 @@ using Unity.Services.Core;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     /// <summary>
     /// A custom network manager that implements additional setup logic and rules

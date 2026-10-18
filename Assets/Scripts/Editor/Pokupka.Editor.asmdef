@@ -1,6 +1,6 @@
 {
-    "name": "com.unity.template.multiplayer-ngo.editor",
-    "rootNamespace": "Unity.Template.Multiplayer.NGO.Editor",
+    "name": "Pokupka.Editor",
+    "rootNamespace": "Pokupka.Editor",
     "references": [
         "GUID:1491147abca9d7d4bb7105af628b223e",
         "GUID:2663f133034a5d948a7f4ae04020cff1",

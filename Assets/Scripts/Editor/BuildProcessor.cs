@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.Template.Multiplayer.NGO.Runtime;
+using Pokupka;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Unity.Template.Multiplayer.NGO.Editor
+namespace Pokupka.Editor
 {
     ///<summary>
     ///Performs additional operations before/after the build is done

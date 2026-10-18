@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     ///<summary>
     /// A collection of Coroutines Helpers

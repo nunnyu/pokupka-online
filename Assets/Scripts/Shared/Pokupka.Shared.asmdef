@@ -1,6 +1,6 @@
 {
-    "name": "com.unity.template.multiplayer-ngo.shared",
-    "rootNamespace": "Unity.Template.Multiplayer.NGO.Shared",
+    "name": "Pokupka.Shared",
+    "rootNamespace": "Pokupka.Shared",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -5,7 +5,7 @@ using UnityEditor;
 #endif
 using UnityEngine.UIElements;
 
-namespace Unity.Template.Multiplayer.NGO.Shared
+namespace Pokupka.Shared
 {
     /// <summary>
     /// An utility class for common UIElements setup method

@@ -1,14 +1,14 @@
 using System.Threading.Tasks;
 using Unity.Multiplayer;
 using Unity.Networking.Transport;
-using Unity.Template.Multiplayer.NGO.Runtime;
-using Unity.Template.Multiplayer.NGO.Runtime.SimpleJSON;
-using Unity.Template.Multiplayer.NGO.Shared;
+using Pokupka;
+using Pokupka.SimpleJSON;
+using Pokupka.Shared;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Unity.Template.Multiplayer.NGO.Editor
+namespace Pokupka.Editor
 {
     ///<summary>
     /// Allows for fast switching between host/server only/client only modes in unity editor

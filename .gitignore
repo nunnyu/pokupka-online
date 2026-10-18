@@ -1,3 +1,6 @@
+# mine
+plan.md
+
 # unity generated
 [Ll]ibrary/
 [Tt]emp/
@@ -37,9 +40,12 @@ crashlytics-build.properties
 .DS_Store
 Thumbs.db
 
-# backend (python)
+# backend 
 backend/.venv/
 __pycache__/
 *.pyc
 .env
 *.sqlite3
+
+# local dev config 
+/StartupConfiguration.json

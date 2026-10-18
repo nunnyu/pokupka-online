@@ -1,9 +1,9 @@
 using System.IO;
 using System.Threading.Tasks;
-using Unity.Template.Multiplayer.NGO.Runtime.SimpleJSON;
+using Pokupka.SimpleJSON;
 using UnityEngine;
 
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     /// <summary>
     /// Utility class for JSON files

@@ -1,9 +1,10 @@
 {
-    "name": "com.unity.template.multiplayer-ngo.runtime",
-    "rootNamespace": "Unity.Template.Multiplayer.NGO.Runtime",
+    "name": "Pokupka.Runtime",
+    "rootNamespace": "Pokupka",
     "references": [
         "Unity.Netcode.Runtime",
-        "com.unity.template.multiplayer-ngo.shared",
+        "Unity.InputSystem",
+        "Pokupka.Shared",
         "ParrelSync",
         "Unity.Services.Core",
         "Unity.Services.Multiplayer",

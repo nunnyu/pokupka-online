@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     internal class CommandLineArgumentsParser
     {

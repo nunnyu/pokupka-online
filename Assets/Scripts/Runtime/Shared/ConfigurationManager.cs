@@ -2,11 +2,11 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using Unity.Multiplayer;
-using Unity.Template.Multiplayer.NGO.Runtime.SimpleJSON;
+using Pokupka.SimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     /// <summary>
     /// A configuration Manager for easily accessing dynamic configurations that alter the behaviour of the app

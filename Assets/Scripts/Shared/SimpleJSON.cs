@@ -1,4 +1,4 @@
-namespace Unity.Template.Multiplayer.NGO.Runtime
+namespace Pokupka
 {
     /* * * * *
      * A simple JSON Parser / builder
