@@ -115,7 +115,8 @@ namespace Pokupka
             return;
 #endif
 #endif
-            LoadConfigurationFromFile(configFilePath, false, false);
+            // In the editor (including multiplayer play mode virtual players) a missing config is created from the default.
+            LoadConfigurationFromFile(configFilePath, Application.isEditor, false);
             onFinished?.Invoke(this);
         }
 
