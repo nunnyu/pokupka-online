@@ -70743,7 +70743,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c70a9f8c2243ab145bece962183e0594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Offset: {x: 0, y: 14, z: -10}
+  m_Offset: {x: 0, y: 10, z: -7}
   m_FollowSharpness: 20
 --- !u!81 &2070291171
 AudioListener:
@@ -70840,6 +70840,8 @@ MonoBehaviour:
   m_SnapHeight: 190
   m_ColorLevels: 32
   m_AffineStrength: 0
+  m_DisplayShader: {fileID: 4800000, guid: e4ab403a7bdf44b0a80e857210ed9497, type: 3}
+  m_CharacterLayer: Characters
 --- !u!114 &2070291175
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -5,6 +5,7 @@ Shader "Pokupka/Lit"
         [MainTexture] _BaseMap ("Texture", 2D) = "white" {}
         [MainColor] _BaseColor ("Color", Color) = (1, 1, 1, 1)
         _WorldUVScale ("World UV Scale (0 = mesh UVs)", Float) = 0
+        [ToggleUI] _VertexSnap ("Vertex Snap", Float) = 1
     }
 
     SubShader
@@ -20,6 +21,7 @@ Shader "Pokupka/Lit"
             float4 _BaseMap_ST;
             half4 _BaseColor;
             float _WorldUVScale;
+            float _VertexSnap;
         CBUFFER_END
 
         // Set globally by WorldLook.
@@ -44,7 +46,7 @@ Shader "Pokupka/Lit"
 
         float4 SnapToPixelGrid(float4 positionCS)
         {
-            if (_VertexSnapResolution.y <= 0)
+            if (_VertexSnapResolution.y <= 0 || _VertexSnap < 0.5)
             {
                 return positionCS;
             }
