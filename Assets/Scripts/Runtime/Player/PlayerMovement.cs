@@ -15,11 +15,11 @@ namespace Pokupka
         float m_HeldResendInterval = 0.1f;
 
         static readonly Plane k_Ground = new Plane(Vector3.up, Vector3.zero);
-        static readonly Color k_LocalPlayerColor = new Color(0.3f, 0.75f, 0.95f); // temp glup 
 
         bool m_HasDestination;
         Vector3 m_Destination;
         float m_NextResendTime;
+        ClickSpark m_ClickSpark;
 
         public override void OnNetworkSpawn()
         {
@@ -27,10 +27,7 @@ namespace Pokupka
             {
                 transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
             }
-            if (IsOwner)
-            {
-                GetComponentInChildren<Renderer>().material.color = k_LocalPlayerColor;
-            }
+            m_ClickSpark = GetComponent<ClickSpark>();
         }
 
         void Update()
@@ -64,8 +61,13 @@ namespace Pokupka
             Ray ray = camera.ScreenPointToRay(mouse.position.ReadValue());
             if (k_Ground.Raycast(ray, out float distance))
             {
+                Vector3 point = ray.GetPoint(distance);
                 m_NextResendTime = Time.time + m_HeldResendInterval;
-                RequestMoveServerRpc(ray.GetPoint(distance));
+                RequestMoveServerRpc(point);
+                if (clicked && m_ClickSpark != null)
+                {
+                    m_ClickSpark.Play(point);
+                }
             }
         }
 
