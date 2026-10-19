@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Pokupka
 {
-    // Owner sends the clicked point, server validates it and moves the player with a CharacterController.
+    // Owner sends the clicked point, server validates it, finds a path with A* and walks it with a CharacterController.
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovement : NetworkBehaviour
     {
@@ -23,19 +24,23 @@ namespace Pokupka
         [SerializeField]
         string m_CharacterLayer = "Characters";
 
-        const float k_StuckTimeout = 0.25f;
+        const float k_StuckTimeout = 0.4f;
+        const int k_MaxReplans = 2;
         const float k_ArriveDistance = 0.05f;
+        const float k_WaypointDistance = 0.35f;
 
         CharacterController m_Controller;
         ClickSpark m_ClickSpark;
         int m_GroundMask;
         int m_ClickMask;
 
-        bool m_HasDestination;
-        Vector3 m_Destination;
+        readonly List<Vector3> m_Path = new List<Vector3>();
+        int m_PathIndex;
         float m_NextResendTime;
         float m_VerticalSpeed;
         float m_StuckTime;
+        Vector3 m_Goal;
+        int m_Replans;
         Vector3 m_Knockback;
 
         void Awake()
@@ -51,6 +56,7 @@ namespace Pokupka
             if (IsServer)
             {
                 Teleport(new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f)));
+                NavGrid.Instance.EnsureBuilt();
             }
         }
 
@@ -122,9 +128,20 @@ namespace Pokupka
             {
                 return;
             }
-            m_Destination = destination;
-            m_HasDestination = true;
+            m_Goal = destination;
+            m_Replans = 0;
+            PlanPath();
+        }
+
+        void PlanPath()
+        {
+            Vector3 feet = transform.position + Vector3.down * (m_Controller.height * 0.5f);
+            m_PathIndex = 0;
             m_StuckTime = 0f;
+            if (!NavGrid.Instance.FindPath(feet, m_Goal, m_Path))
+            {
+                m_Path.Clear();
+            }
         }
 
         bool IsValidDestination(Vector3 destination)
@@ -144,20 +161,20 @@ namespace Pokupka
         {
             float deltaTime = Time.deltaTime;
             Vector3 walk = Vector3.zero;
-            if (m_HasDestination)
+            while (m_PathIndex < m_Path.Count)
             {
-                Vector3 toDestination = m_Destination - transform.position;
-                toDestination.y = 0f;
-                float distance = toDestination.magnitude;
-                if (distance < k_ArriveDistance)
+                Vector3 toWaypoint = m_Path[m_PathIndex] - transform.position;
+                toWaypoint.y = 0f;
+                float distance = toWaypoint.magnitude;
+                bool isLast = m_PathIndex == m_Path.Count - 1;
+                if (distance < (isLast ? k_ArriveDistance : k_WaypointDistance))
                 {
-                    m_HasDestination = false;
+                    m_PathIndex++;
+                    continue;
                 }
-                else
-                {
-                    transform.rotation = Quaternion.LookRotation(toDestination);
-                    walk = toDestination / distance * Mathf.Min(m_MoveSpeed * deltaTime, distance);
-                }
+                transform.rotation = Quaternion.LookRotation(toWaypoint);
+                walk = toWaypoint / distance * Mathf.Min(m_MoveSpeed * deltaTime, distance);
+                break;
             }
 
             m_VerticalSpeed = m_Controller.isGrounded ? -1f : m_VerticalSpeed - m_Gravity * deltaTime;
@@ -167,15 +184,23 @@ namespace Pokupka
             Vector3 before = transform.position;
             m_Controller.Move(walk + knockback + Vector3.up * (m_VerticalSpeed * deltaTime));
 
-            if (m_HasDestination && walk.sqrMagnitude > 0f)
+            if (walk.sqrMagnitude > 0f)
             {
                 Vector3 moved = transform.position - before;
                 moved.y = 0f;
-                // Give up when pushing into something instead of making progress.
-                m_StuckTime = moved.magnitude < walk.magnitude * 0.2f ? m_StuckTime + deltaTime : 0f;
+                // Sliding along a wall still counts as progress; only near-zero movement is stuck.
+                m_StuckTime = moved.magnitude < walk.magnitude * 0.05f ? m_StuckTime + deltaTime : 0f;
                 if (m_StuckTime > k_StuckTimeout)
                 {
-                    m_HasDestination = false;
+                    if (m_Replans < k_MaxReplans)
+                    {
+                        m_Replans++;
+                        PlanPath();
+                    }
+                    else
+                    {
+                        m_Path.Clear();
+                    }
                 }
             }
         }

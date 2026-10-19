@@ -9,9 +9,15 @@ namespace Pokupka
         [SerializeField, Tooltip("Covers -HalfSize..HalfSize on X and Z")]
         float m_HalfSize = 60f;
         [SerializeField]
-        float m_CellSize = 0.5f;
-        [SerializeField, Tooltip("Radius of the space a walker needs")]
-        float m_AgentRadius = 0.4f;
+        float m_CellSize = 0.25f;
+        [SerializeField, Tooltip("Gaps narrower than twice this are blocked; kept below the walker's collider, which handles the exact fit")]
+        float m_AgentRadius = 0.25f;
+        [SerializeField, Tooltip("Paths try to stay at least this far from obstacles, which centres them in gaps")]
+        float m_ComfortDistance = 1f;
+        [SerializeField, Tooltip("Extra cost of a step right next to an obstacle")]
+        float m_WallAvoidance = 4f;
+        [SerializeField, Tooltip("Body radius swept along straightened path segments")]
+        float m_BodyRadius = 0.45f;
         [SerializeField]
         float m_AgentHeight = 2f;
         [SerializeField]
@@ -19,14 +25,17 @@ namespace Pokupka
         [SerializeField, Tooltip("Layers that never block walking (besides ground)")]
         string[] m_IgnoredLayers = { "Characters", "UI", "Ignore Raycast" };
         [SerializeField, Tooltip("Stops searches that explore too many cells")]
-        int m_MaxExpandedCells = 40000;
+        int m_MaxExpandedCells = 200000;
 
         static NavGrid s_Instance;
 
         int m_Width;
         bool[] m_Walkable;
+        float[] m_Clearance;
+        bool[] m_HasGround;
         float[] m_GroundHeight;
         bool m_Built;
+        int m_ObstacleMask;
 
         // Reused between searches so nothing is allocated per click.
         float[] m_Cost;
@@ -57,18 +66,29 @@ namespace Pokupka
             }
         }
 
+        public void EnsureBuilt()
+        {
+            if (!m_Built)
+            {
+                Build();
+            }
+        }
+
         public void Build()
         {
             m_Width = Mathf.CeilToInt(m_HalfSize * 2f / m_CellSize);
             int count = m_Width * m_Width;
             m_Walkable = new bool[count];
+            m_Clearance = new float[count];
+            m_HasGround = new bool[count];
             m_GroundHeight = new float[count];
             m_Cost = new float[count];
             m_Parent = new int[count];
             m_Visited = new int[count];
 
+            Physics.SyncTransforms();
             int groundMask = LayerMask.GetMask(m_GroundLayer);
-            int obstacleMask = ~(groundMask | LayerMask.GetMask(m_IgnoredLayers));
+            m_ObstacleMask = ~(groundMask | LayerMask.GetMask(m_IgnoredLayers));
             for (int z = 0; z < m_Width; z++)
             {
                 for (int x = 0; x < m_Width; x++)
@@ -80,12 +100,14 @@ namespace Pokupka
                     {
                         continue;
                     }
+                    m_HasGround[index] = true;
                     m_GroundHeight[index] = hit.point.y;
                     Vector3 bottom = hit.point + Vector3.up * (m_AgentRadius + 0.1f);
                     Vector3 top = hit.point + Vector3.up * (m_AgentHeight - m_AgentRadius);
-                    m_Walkable[index] = !Physics.CheckCapsule(bottom, top, m_AgentRadius, obstacleMask, QueryTriggerInteraction.Ignore);
+                    m_Walkable[index] = !Physics.CheckCapsule(bottom, top, m_AgentRadius, m_ObstacleMask, QueryTriggerInteraction.Ignore);
                 }
             }
+            ComputeClearance();
             m_Built = true;
         }
 
@@ -93,10 +115,7 @@ namespace Pokupka
         public bool FindPath(Vector3 start, Vector3 end, List<Vector3> path)
         {
             path.Clear();
-            if (!m_Built)
-            {
-                Build();
-            }
+            EnsureBuilt();
             if (!TryGetCell(start, out int startCell) || !TryGetCell(end, out int endCell))
             {
                 return false;
@@ -108,7 +127,9 @@ namespace Pokupka
                 return false;
             }
 
-            if (!Search(startCell, endCell))
+            int goalCell = endCell;
+            endCell = Search(startCell, goalCell);
+            if (endCell == startCell && startCell != goalCell)
             {
                 return false;
             }
@@ -122,19 +143,22 @@ namespace Pokupka
             cells.Reverse();
             Smooth(cells, path);
 
-            if (endCell == CellIndex(end))
+            if (endCell == goalCell && endCell == CellIndex(end))
             {
                 path[path.Count - 1] = new Vector3(end.x, path[path.Count - 1].y, end.z);
             }
             return true;
         }
 
-        bool Search(int startCell, int endCell)
+        // Returns the end cell, or the explored cell closest to it when the end can't be reached.
+        int Search(int startCell, int endCell)
         {
             m_SearchId++;
             m_Open.Clear();
             Visit(startCell, 0f, startCell);
             m_Open.Push(startCell, Heuristic(startCell, endCell));
+            int closest = startCell;
+            float closestDistance = Heuristic(startCell, endCell);
 
             int expanded = 0;
             while (m_Open.Count > 0)
@@ -142,11 +166,17 @@ namespace Pokupka
                 int current = m_Open.Pop();
                 if (current == endCell)
                 {
-                    return true;
+                    return endCell;
+                }
+                float distance = Heuristic(current, endCell);
+                if (distance < closestDistance)
+                {
+                    closest = current;
+                    closestDistance = distance;
                 }
                 if (++expanded > m_MaxExpandedCells)
                 {
-                    return false;
+                    break;
                 }
 
                 int cx = current % m_Width;
@@ -167,7 +197,10 @@ namespace Pokupka
                     }
 
                     int neighbour = nx + nz * m_Width;
-                    float cost = m_Cost[current] + (diagonal ? 1.41421356f : 1f);
+                    float stepCost = diagonal ? 1.41421356f : 1f;
+                    float closeness = Mathf.Clamp01(1f - m_Clearance[neighbour] / m_ComfortDistance);
+                    stepCost *= 1f + m_WallAvoidance * closeness * closeness;
+                    float cost = m_Cost[current] + stepCost;
                     if (m_Visited[neighbour] == m_SearchId && cost >= m_Cost[neighbour])
                     {
                         continue;
@@ -176,7 +209,7 @@ namespace Pokupka
                     m_Open.Push(neighbour, cost + Heuristic(neighbour, endCell));
                 }
             }
-            return false;
+            return closest;
         }
 
         void Visit(int cell, float cost, int parent)
@@ -213,18 +246,73 @@ namespace Pokupka
         {
             Vector3 a = CellPoint(from);
             Vector3 b = CellPoint(to);
-            float distance = Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+            Vector3 direction = b - a;
+            direction.y = 0f;
+            float distance = direction.magnitude;
+            if (distance < 0.001f)
+            {
+                return true;
+            }
+
             int steps = Mathf.CeilToInt(distance / (m_CellSize * 0.5f));
             for (int i = 1; i < steps; i++)
             {
-                Vector3 point = Vector3.Lerp(a, b, (float)i / steps);
-                // Check a little to each side too, so the walker's body fits along the line.
-                if (!IsWalkableAt(point))
+                if (!TryGetCell(Vector3.Lerp(a, b, (float)i / steps), out int cell) || !m_Walkable[cell])
                 {
                     return false;
                 }
             }
-            return true;
+
+            // Sweep a body-sized capsule along the line so shortcuts never graze walls.
+            Vector3 bottom = a + Vector3.up * (m_BodyRadius + 0.15f);
+            Vector3 top = a + Vector3.up * (m_AgentHeight - m_BodyRadius);
+            return !Physics.CapsuleCast(bottom, top, m_BodyRadius, direction / distance, distance, m_ObstacleMask, QueryTriggerInteraction.Ignore);
+        }
+
+        // Distance from every walkable cell to the nearest blocked cell.
+        void ComputeClearance()
+        {
+            const float diagonal = 1.41421356f;
+            float far = m_Width * 2f;
+            for (int i = 0; i < m_Clearance.Length; i++)
+            {
+                m_Clearance[i] = m_Walkable[i] ? far : 0f;
+            }
+            for (int z = 0; z < m_Width; z++)
+            {
+                for (int x = 0; x < m_Width; x++)
+                {
+                    int i = x + z * m_Width;
+                    float d = m_Clearance[i];
+                    d = Mathf.Min(d, ClearanceAt(x - 1, z) + 1f);
+                    d = Mathf.Min(d, ClearanceAt(x, z - 1) + 1f);
+                    d = Mathf.Min(d, ClearanceAt(x - 1, z - 1) + diagonal);
+                    d = Mathf.Min(d, ClearanceAt(x + 1, z - 1) + diagonal);
+                    m_Clearance[i] = d;
+                }
+            }
+            for (int z = m_Width - 1; z >= 0; z--)
+            {
+                for (int x = m_Width - 1; x >= 0; x--)
+                {
+                    int i = x + z * m_Width;
+                    float d = m_Clearance[i];
+                    d = Mathf.Min(d, ClearanceAt(x + 1, z) + 1f);
+                    d = Mathf.Min(d, ClearanceAt(x, z + 1) + 1f);
+                    d = Mathf.Min(d, ClearanceAt(x + 1, z + 1) + diagonal);
+                    d = Mathf.Min(d, ClearanceAt(x - 1, z + 1) + diagonal);
+                    m_Clearance[i] = d;
+                }
+            }
+            for (int i = 0; i < m_Clearance.Length; i++)
+            {
+                m_Clearance[i] *= m_CellSize;
+            }
+        }
+
+        float ClearanceAt(int x, int z)
+        {
+            return x >= 0 && z >= 0 && x < m_Width && z < m_Width ? m_Clearance[x + z * m_Width] : 0f;
         }
 
         int NearestWalkable(int cell)
@@ -268,11 +356,6 @@ namespace Pokupka
             return x >= 0 && z >= 0 && x < m_Width && z < m_Width && m_Walkable[x + z * m_Width];
         }
 
-        bool IsWalkableAt(Vector3 point)
-        {
-            return TryGetCell(point, out int cell) && m_Walkable[cell];
-        }
-
         bool TryGetCell(Vector3 point, out int cell)
         {
             int x = Mathf.FloorToInt((point.x + m_HalfSize) / m_CellSize);
@@ -308,7 +391,7 @@ namespace Pokupka
             var size = new Vector3(m_CellSize, 0.05f, m_CellSize);
             for (int i = 0; i < m_Walkable.Length; i++)
             {
-                if (!m_Walkable[i] && m_GroundHeight[i] != 0f)
+                if (!m_Walkable[i] && m_HasGround[i])
                 {
                     Gizmos.DrawCube(CellPoint(i), size);
                 }

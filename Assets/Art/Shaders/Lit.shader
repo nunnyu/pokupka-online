@@ -31,6 +31,10 @@ Shader "Pokupka/Lit"
         half4 _AmbientColor;
         half4 _FogColor;
         float4 _FogRange;
+        float4 _LanternPosition;
+        half4 _LanternColor;
+        float _Desaturation;
+        float _Vignette;
         float _ColorLevels;
         float _AffineStrength;
 
@@ -82,7 +86,8 @@ Shader "Pokupka/Lit"
                 float3 affineUV : TEXCOORD1;
                 half3 lighting : TEXCOORD2;
                 float fog : TEXCOORD3;
-                float2 positionXZ : TEXCOORD4;
+                float3 positionWS : TEXCOORD4;
+                half3 normalWS : TEXCOORD5;
             };
 
             Varyings vert(Attributes input)
@@ -96,11 +101,12 @@ Shader "Pokupka/Lit"
 
                 float2 uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 output.uv = uv;
-                output.positionXZ = positionWS.xz;
+                output.positionWS = positionWS;
                 // Interpolating uv * w and w, then dividing, cancels perspective correction.
                 output.affineUV = float3(uv * positionCS.w, positionCS.w);
 
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                output.normalWS = normalWS;
                 half nDotL = saturate(dot(normalWS, _SunDirection.xyz));
                 output.lighting = _AmbientColor.rgb + _SunColor.rgb * nDotL;
 
@@ -117,11 +123,21 @@ Shader "Pokupka/Lit"
                 if (_WorldUVScale > 0)
                 {
                     // Lets one texture span many tiles so the pattern repeats less often.
-                    uv = input.positionXZ / _WorldUVScale;
+                    uv = input.positionWS.xz / _WorldUVScale;
                 }
 
-                half3 color = SampleBase(uv).rgb * _BaseColor.rgb * input.lighting;
+                float3 toLantern = _LanternPosition.xyz - input.positionWS;
+                float lanternFalloff = _LanternPosition.w > 0 ? saturate(1 - length(toLantern) / _LanternPosition.w) : 0;
+                half lanternWrap = saturate(dot(normalize(input.normalWS), normalize(toLantern))) * 0.5 + 0.5;
+                half3 lighting = input.lighting + _LanternColor.rgb * lanternFalloff * lanternFalloff * lanternWrap;
+
+                half3 color = SampleBase(uv).rgb * _BaseColor.rgb * lighting;
+                half luma = dot(color, half3(0.2126, 0.7152, 0.0722));
+                color = lerp(color, luma.xxx, _Desaturation);
                 color = lerp(color, _FogColor.rgb, input.fog);
+
+                float2 screenUV = input.positionCS.xy / _ScaledScreenParams.xy - 0.5;
+                color *= 1 - _Vignette * saturate(dot(screenUV, screenUV) * 2);
 
                 if (_ColorLevels > 1)
                 {

@@ -12,13 +12,25 @@ namespace Pokupka
         [SerializeField]
         Light m_Sun;
         [SerializeField]
-        Color m_AmbientColor = new Color(0.32f, 0.3f, 0.4f);
+        Color m_AmbientColor = new Color(0.16f, 0.16f, 0.24f);
         [SerializeField]
-        Color m_FogColor = new Color(0.16f, 0.14f, 0.22f);
+        Color m_FogColor = new Color(0.04f, 0.035f, 0.06f);
         [SerializeField]
-        float m_FogStart = 18f;
+        float m_FogStart = 8f;
         [SerializeField]
-        float m_FogEnd = 55f;
+        float m_FogEnd = 32f;
+        [SerializeField, Tooltip("Warm light around the point the camera looks at")]
+        Color m_LanternColor = new Color(1f, 0.62f, 0.32f);
+        [SerializeField]
+        float m_LanternIntensity = 1.4f;
+        [SerializeField]
+        float m_LanternRange = 9f;
+        [SerializeField]
+        float m_LanternHeight = 1.5f;
+        [SerializeField, Range(0f, 1f)]
+        float m_Desaturation = 0.3f;
+        [SerializeField, Range(0f, 1f)]
+        float m_Vignette = 0.6f;
         [SerializeField, Tooltip("Vertical resolution the game renders at (play mode only)")]
         int m_RenderHeight = 240;
         [SerializeField, Tooltip("Vertical resolution vertices snap to, lower = more wobble")]
@@ -34,6 +46,10 @@ namespace Pokupka
         static readonly int k_AmbientColor = Shader.PropertyToID("_AmbientColor");
         static readonly int k_FogColor = Shader.PropertyToID("_FogColor");
         static readonly int k_FogRange = Shader.PropertyToID("_FogRange");
+        static readonly int k_LanternPosition = Shader.PropertyToID("_LanternPosition");
+        static readonly int k_LanternColor = Shader.PropertyToID("_LanternColor");
+        static readonly int k_Desaturation = Shader.PropertyToID("_Desaturation");
+        static readonly int k_Vignette = Shader.PropertyToID("_Vignette");
         static readonly int k_ColorLevels = Shader.PropertyToID("_ColorLevels");
         static readonly int k_AffineStrength = Shader.PropertyToID("_AffineStrength");
 
@@ -79,6 +95,11 @@ namespace Pokupka
             Shader.SetGlobalColor(k_AmbientColor, m_AmbientColor);
             Shader.SetGlobalColor(k_FogColor, m_FogColor);
             Shader.SetGlobalVector(k_FogRange, new Vector4(m_FogStart, m_FogEnd, 0f, 0f));
+            Vector3 lantern = GetLanternPosition();
+            Shader.SetGlobalVector(k_LanternPosition, new Vector4(lantern.x, lantern.y, lantern.z, m_LanternRange));
+            Shader.SetGlobalColor(k_LanternColor, m_LanternColor * m_LanternIntensity);
+            Shader.SetGlobalFloat(k_Desaturation, m_Desaturation);
+            Shader.SetGlobalFloat(k_Vignette, m_Vignette);
             Shader.SetGlobalFloat(k_ColorLevels, m_ColorLevels);
             Shader.SetGlobalFloat(k_AffineStrength, m_AffineStrength);
 
@@ -90,6 +111,15 @@ namespace Pokupka
             {
                 m_Camera.backgroundColor = m_FogColor;
             }
+        }
+
+        // Where the camera's view meets the ground, which is the player for the top-down camera.
+        Vector3 GetLanternPosition()
+        {
+            Vector3 forward = transform.forward;
+            float distance = forward.y < -0.01f ? transform.position.y / -forward.y : 10f;
+            Vector3 ground = transform.position + forward * distance;
+            return ground + Vector3.up * m_LanternHeight;
         }
 
         void ApplyRenderScale()

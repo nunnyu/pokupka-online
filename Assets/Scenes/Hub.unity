@@ -3392,6 +3392,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 87653557}
   m_Mesh: {fileID: 4300000, guid: e9f9e84ed41d4a5469abd92449ce7aff, type: 2}
+--- !u!4 &89904734 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: dc85c1f2a3d3f51448456188067f531a, type: 3}
+  m_PrefabInstance: {fileID: 328890221}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &90287997
 GameObject:
   m_ObjectHideFlags: 0
@@ -11754,7 +11759,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 1209353243}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: dc85c1f2a3d3f51448456188067f531a, type: 3}
       propertyPath: m_LocalScale.x
@@ -18337,6 +18342,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 518503326}
   m_Mesh: {fileID: 4300000, guid: e9f9e84ed41d4a5469abd92449ce7aff, type: 2}
+--- !u!4 &519036790 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: dc85c1f2a3d3f51448456188067f531a, type: 3}
+  m_PrefabInstance: {fileID: 2069026901}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &520531946
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43541,6 +43551,8 @@ Transform:
   - {fileID: 885919991}
   - {fileID: 634866225}
   - {fileID: 182044414}
+  - {fileID: 89904734}
+  - {fileID: 519036790}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1216144347
@@ -46849,8 +46861,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 0.86, b: 0.68, a: 1}
-  m_Intensity: 1.1
+  m_Color: {r: 0.55, g: 0.64, b: 0.9, a: 1}
+  m_Intensity: 0.4
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -72598,7 +72610,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 1209353243}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: dc85c1f2a3d3f51448456188067f531a, type: 3}
       propertyPath: m_LocalScale.x
@@ -72783,10 +72795,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Sun: {fileID: 1324007839}
-  m_AmbientColor: {r: 0.32, g: 0.3, b: 0.4, a: 1}
-  m_FogColor: {r: 0.21960784, g: 0.15500867, b: 0.14117648, a: 1}
-  m_FogStart: 18
-  m_FogEnd: 55
+  m_AmbientColor: {r: 0.16, g: 0.16, b: 0.24, a: 1}
+  m_FogColor: {r: 0.04, g: 0.035, b: 0.06, a: 1}
+  m_FogStart: 8
+  m_FogEnd: 32
+  m_LanternColor: {r: 1, g: 0.62, b: 0.32, a: 1}
+  m_LanternIntensity: 1.4
+  m_LanternRange: 9
+  m_LanternHeight: 1.5
+  m_Desaturation: 0.3
+  m_Vignette: 0.6
   m_RenderHeight: 190
   m_SnapHeight: 190
   m_ColorLevels: 32
@@ -75549,5 +75567,3 @@ SceneRoots:
   - {fileID: 901931960}
   - {fileID: 1209353243}
   - {fileID: 508612429}
-  - {fileID: 328890221}
-  - {fileID: 2069026901}
