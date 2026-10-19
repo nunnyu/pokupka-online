@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Pokupka
 {
-    // Puts the character's renderers on the full resolution layer and gives them the character material.
+    // Puts the whole player on the character layer and gives its renderers the character material.
     public class CharacterVisuals : MonoBehaviour
     {
         [SerializeField]
@@ -16,7 +16,7 @@ namespace Pokupka
         {
             Transform root = m_Visuals != null ? m_Visuals : transform;
             int layer = LayerMask.NameToLayer(m_Layer);
-            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            foreach (Transform child in GetComponentsInChildren<Transform>(true))
             {
                 if (layer >= 0)
                 {
